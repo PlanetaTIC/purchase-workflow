@@ -3,14 +3,14 @@
 #   (http://www.eficent.com)
 
 from odoo import api, fields, models
-import odoo.addons.decimal_precision as dp
-
+from odoo.addons import decimal_precision as dp
 
 class ProductProduct(models.Model):
     _inherit = 'product.product'
 
     last_purchase_price = fields.Float(
-        string='Last Purchase Price', digits=dp.get_precision('Product Price'))
+        string='Last Purchase Price',
+        digits=dp.get_precision('Product Price'),)
     last_purchase_date = fields.Date(
         string='Last Purchase Date')
     last_supplier_id = fields.Many2one(
@@ -24,7 +24,7 @@ class ProductProduct(models.Model):
             return
         for product in self:
             date_order = False
-            price_unit_uom = 0.0
+            price_unit = 0.0
             last_supplier = False
 
             # Check if Order ID was passed, to speed up the search
@@ -44,27 +44,27 @@ class ProductProduct(models.Model):
 
                 date_order = last_line.order_id.date_order
                 # Compute Price Unit in the Product base UoM
-                price_unit_uom = product.uom_id._compute_quantity(
-                    last_line.price_unit, last_line.product_uom)
+                price_unit = last_line.price_unit
                 last_supplier = last_line.order_id.partner_id
 
             # Assign values to record
             product.write({
                 "last_purchase_date": date_order,
-                "last_purchase_price": price_unit_uom,
+                "last_purchase_price": price_unit,
                 "last_supplier_id": last_supplier.id
                 if last_supplier else False,
             })
             # Set related product template values
             product.product_tmpl_id.set_product_template_last_purchase(
-                date_order, price_unit_uom, last_supplier)
+                date_order, price_unit, last_supplier)
 
 
 class ProductTemplate(models.Model):
     _inherit = 'product.template'
 
     last_purchase_price = fields.Float(
-        string='Last Purchase Price', digits=dp.get_precision('Product Price'))
+        string='Last Purchase Price',
+        digits=dp.get_precision('Product Price'),)
     last_purchase_date = fields.Date(
         string='Last Purchase Date')
     last_supplier_id = fields.Many2one(
